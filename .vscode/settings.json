@@ -7,5 +7,11 @@
         "icons":true,
         "osx/build":true,
         "autom4te.cache":true,
+    },
+    "files.associations": {
+        "cstdint": "cpp",
+        "chrono": "cpp",
+        "slist": "cpp",
+        "algorithm": "cpp"
     }
 }
