@@ -17,8 +17,6 @@ typedef uint64_t (*DSDIOCallback_Tell) (void* client_data);
 
 typedef int (*DSDIOCallback_Eof) (void* client_data);
 
-typedef int (*DSDIOCallback_Close) (void* client_data);
-
 typedef DSDIOLengthStatus (*DSDIOCallback_Length)(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data);
 
 typedef struct {
@@ -27,7 +25,6 @@ typedef struct {
     DSDIOCallback_Seek seek;
     DSDIOCallback_Tell tell;
     DSDIOCallback_Eof eof;
-    DSDIOCallback_Close close;
     DSDIOCallback_Length length; 
 } DSDIOCallbacks;
 
