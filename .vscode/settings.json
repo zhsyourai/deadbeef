@@ -6,7 +6,7 @@
         "pixmaps":true,
         "icons":true,
         "osx/build":true,
-        "autom4te.cache":true,
+        "autom4te.cache":true
     },
     "files.associations": {
         "cstdint": "cpp",
