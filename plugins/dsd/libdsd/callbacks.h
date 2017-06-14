@@ -1,5 +1,5 @@
-#ifndef LIBDSD_CALLBACKS_H_INCLUDED
-#define LIBDSD_CALLBACKS_H_INCLUDED
+#ifndef LIBDSDCALLBACKS_H_INCLUDED
+#define LIBDSDCALLBACKS_H_INCLUDED
 
 #include <stddef.h>
 
@@ -7,28 +7,29 @@
 extern "C" {
 #endif
 
-typedef void* DSD_IOHandle;
+typedef size_t (*DSDIOCallback_Read) (void *ptr, size_t size, size_t nmemb, void* client_data);
 
-typedef size_t (*DSD_IOCallback_Read) (void *ptr, size_t size, size_t nmemb, DSD_IOHandle handle);
+typedef size_t (*DSDIOCallback_Write) (const void *ptr, size_t size, size_t nmemb, void* client_data);
 
-typedef size_t (*DSD_IOCallback_Write) (const void *ptr, size_t size, size_t nmemb, DSD_IOHandle handle);
+typedef int (*DSDIOCallback_Seek) (uint64_t offset, int whence, void* client_data);
 
-typedef int (*DSD_IOCallback_Seek) (DSD_IOHandle handle, DSD_int64 offset, int whence);
+typedef uint64_t (*DSDIOCallback_Tell) (void* client_data);
 
-typedef DSD_int64 (*DSD_IOCallback_Tell) (DSD_IOHandle handle);
+typedef int (*DSDIOCallback_Eof) (void* client_data);
 
-typedef int (*DSD_IOCallback_Eof) (DSD_IOHandle handle);
+typedef int (*DSDIOCallback_Close) (void* client_data);
 
-typedef int (*DSD_IOCallback_Close) (DSD_IOHandle handle);
+typedef DSDIOLengthStatus (*DSDIOCallback_Length)(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data);
 
 typedef struct {
-    DSD_IOCallback_Read read;
-    DSD_IOCallback_Write write;
-    DSD_IOCallback_Seek seek;
-    DSD_IOCallback_Tell tell;
-    DSD_IOCallback_Eof eof;
-    DSD_IOCallback_Close close;
-} DSD_IOCallbacks;
+    DSDIOCallback_Read read;
+    DSDIOCallback_Write write;
+    DSDIOCallback_Seek seek;
+    DSDIOCallback_Tell tell;
+    DSDIOCallback_Eof eof;
+    DSDIOCallback_Close close;
+    DSDIOCallback_Length length; 
+} DSDIOCallbacks;
 
 #ifdef __cplusplus
 }

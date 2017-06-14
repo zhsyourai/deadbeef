@@ -1,5 +1,5 @@
 /* libdsd - Direct Stream Digital library
- * Copyright (C) 2017-2017  Hobson Zhu
+ * Copyright (C) -  Hobson Zhu
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,25 +23,50 @@
  * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * PROFITS; OR BUSINESS int32_tERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef LIBDSD_META_DATA_H_INCLUDED
-#define LIBDSD_META_DATA_H_INCLUDED
+#ifndef LIBDSD_DECODER_H_INCLUDED
+#define LIBDSD_DECODER_H_INCLUDED
 
-#include <sys/types.h>
-#include "export.h"
 #include "typedefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-DSS_API int DSS_metadata_get_title(LIBDSDHandle handle, char *str, size_t length);
+DSD_API DSSDecoderState DSD_decoder_get_state(LIBDSDHandle decoder);
 
-DSS_API int DSS_metadata_get_artist(LIBDSDHandle handle, char *str, size_t length);
+DSD_API int32_t DSD_decoder_get_md_checking(LIBDSDHandle decoder);
+
+DSD_API uint64_t DSD_decoder_get_total_samples(LIBDSDHandle decoder);
+
+DSD_API uint32_t DSD_decoder_get_channels(LIBDSDHandle decoder);
+
+DSD_API uint32_t DSD_decoder_get_bits_per_sample(LIBDSDHandle decoder);
+
+DSD_API uint32_t DSD_decoder_get_sample_rate(LIBDSDHandle decoder);
+
+DSD_API int32_t DSD_decoder_get_decode_position(LIBDSDHandle decoder, uint64_t *position);
+
+
+DSD_API LIBDSDHandleInitStatus DSD_decoder_init_stream(LIBDSDHandle decoder, void *client_data);
+
+DSD_API int32_t DSD_decoder_finish(LIBDSDHandle decoder);
+  
+DSD_API int32_t DSD_decoder_flush(LIBDSDHandle decoder);
+
+DSD_API int32_t DSD_decoder_reset(LIBDSDHandle decoder);
+
+DSD_API int32_t DSD_decoder_process_single(LIBDSDHandle decoder);
+
+DSD_API int32_t DSD_decoder_process_until_end_of_streaminfo(LIBDSDHandle decoder);
+
+DSD_API int32_t DSD_decoder_process_until_end_of_stream(LIBDSDHandle decoder);
+
+DSD_API int32_t DSD_decoder_seek_absolute(LIBDSDHandle decoder, uint64_t sample);
 
 #ifdef __cplusplus
 }

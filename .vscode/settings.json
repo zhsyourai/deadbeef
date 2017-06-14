@@ -12,6 +12,8 @@
         "cstdint": "cpp",
         "chrono": "cpp",
         "slist": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "array": "cpp",
+        "utility": "cpp"
     }
 }

@@ -31,4 +31,19 @@
 #ifndef LIBDSD_H_INCLUDED
 #define LIBDSD_H_INCLUDED
 
+#include "typedefs.h"
+#include "callbacks.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+LIBDSDHandle DSD_coder_new();
+
+void DSD_coder_delete(LIBDSDHandle handle);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
