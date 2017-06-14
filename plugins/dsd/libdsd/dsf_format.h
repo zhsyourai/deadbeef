@@ -35,7 +35,7 @@ typedef struct {
   uint32_t ckSampleRate;          // sampling frequency, in Hz
   uint32_t ckBitPerSample;        // bits per sample 1: LSB, 8: MSB
   uint64_t ckSampleCount;         // sampling count is the num per 1 channel.
-  uint32_t ckBlockSizePerChannel; // block size per channel, in bytes
+  uint32_t ckBlockSizePerChannel; // block size per channel, in bytes (fixed 4096)
   uint8_t reserved[4]
 } __attribute((packed)) FormatChunk;
 

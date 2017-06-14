@@ -31,17 +31,29 @@
 #ifndef LIBDSD_META_DATA_H_INCLUDED
 #define LIBDSD_META_DATA_H_INCLUDED
 
-#include <sys/types.h>
 #include "export.h"
 #include "typedefs.h"
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-DSS_API int DSS_metadata_get_title(LIBDSDHandle handle, char *str, size_t length);
+typedef struct {
+  uint32_t sample_rate;
+  uint32_t channels;
+  uint32_t bits_per_sample;
+  uint64_t total_samples;
+  uint32_t block_bytes_per_channel
+} DSDStreamInfo;
 
-DSS_API int DSS_metadata_get_artist(LIBDSDHandle handle, char *str, size_t length);
+DSD_API int DSD_metadata_get_title(LIBDSDHandle handle, char *str,
+                                   size_t length);
+
+DSD_API int DSD_metadata_get_artist(LIBDSDHandle handle, char *str,
+                                    size_t length);
+
+DSD_API int DSD_metadata_get_artist(LIBDSDHandle handle, DSDStreamInfo *streaminfo);
 
 #ifdef __cplusplus
 }
