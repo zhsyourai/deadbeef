@@ -33,14 +33,13 @@
 
 #include "typedefs.h"
 #include "callbacks.h"
+#include "export.h"
+#include "decoder.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-LIBDSDHandle DSD_coder_new();
-
-void DSD_coder_delete(LIBDSDHandle handle);
 
 #ifdef __cplusplus
 }

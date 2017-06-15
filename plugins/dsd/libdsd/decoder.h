@@ -37,9 +37,84 @@
 extern "C" {
 #endif
 
-DSD_API DSSDecoderState DSD_decoder_get_state(LIBDSDHandle decoder);
+typedef enum {
+  DSD_DECODER_READ_STREAMINFO,
+  DSD_DECODER_READ_BLOCK,
+  DSD_DECODER_END_OF_STREAM,
+  DSD_DECODER_SEEK_ERROR,
+  DSD_DECODER_ABORTED,
+  DSD_DECODER_MEMORY_ALLOCATION_ERROR,
+  DSD_DECODER_UNINITIALIZED
+} DSDDecoderState;
 
-DSD_API int32_t DSD_decoder_get_md_checking(LIBDSDHandle decoder);
+extern FLAC_API const char *const DSDDecoderStateString[];
+
+typedef enum {
+  DSD_DECODER_INIT_STATUS_OK = 0,
+  DSD_DECODER_INIT_STATUS_MEMORY_ALLOCATION_ERROR,
+  DSD_DECODER_INIT_STATUS_ALREADY_INITIALIZED
+} DSDDecoderInitStatus;
+
+extern FLAC_API const char *const DSDDecoderInitStatusString[];
+
+typedef enum {
+  DSD_DECODER_READ_STATUS_CONTINUE,
+  DSD_DECODER_READ_STATUS_END_OF_STREAM,
+  DSD_DECODER_READ_STATUS_ABORT
+} DSDDecoderReadStatus;
+
+extern FLAC_API const char *const DSDDecoderReadStatusString[];
+
+typedef enum {
+  DSD_DECODER_SEEK_STATUS_OK,
+  DSD_DECODER_SEEK_STATUS_ERROR,
+  DSD_DECODER_SEEK_STATUS_UNSUPPORTED
+} DSDDecoderSeekStatus;
+
+extern FLAC_API const char *const DSDDecoderSeekStatusString[];
+
+typedef enum {
+  DSD_DECODER_TELL_STATUS_OK,
+  DSD_DECODER_TELL_STATUS_ERROR,
+  DSD_DECODER_TELL_STATUS_UNSUPPORTED
+} DSDDecoderTellStatus;
+
+extern FLAC_API const char *const DSDDecoderTellStatusString[];
+
+typedef enum {
+  DSD_DECODER_LENGTH_STATUS_OK,
+  DSD_DECODER_LENGTH_STATUS_ERROR,
+  DSD_DECODER_LENGTH_STATUS_UNSUPPORTED
+} DSDDecoderLengthStatus;
+
+extern FLAC_API const char *const DSDDecoderLengthStatusString[];
+
+typedef enum {
+  DSD_DECODER_WRITE_STATUS_CONTINUE,
+  DSD_DECODER_WRITE_STATUS_ABORT
+} DSDDecoderWriteStatus;
+
+extern FLAC_API const char *const DSDDecoderWriteStatusString[];
+
+typedef enum {
+  DSD_DECODER_ERROR_STATUS_LOST_SYNC,
+  DSD_DECODER_ERROR_STATUS_BAD_HEADER,
+  DSD_DECODER_ERROR_STATUS_FRAME_CRC_MISMATCH,
+  DSD_DECODER_ERROR_STATUS_UNPARSEABLE_STREAM
+} DSDDecoderErrorStatus;
+
+extern FLAC_API const char *const DSDDecoderErrorStatusString[];
+
+struct _DSDDecoderPrivate;
+typedef struct {
+    struct _DSDDecoderPrivate *_privite;
+} DSDDecoder;
+
+DSD_API LIBDSDHandle DSD_decoder_new(DSDIOCallbacks callbacks);
+
+DSD_API void DSD_decoder_delete(LIBDSDHandle handle);
+
+DSD_API DSDDecoderState DSD_decoder_get_state(LIBDSDHandle decoder);
 
 DSD_API uint64_t DSD_decoder_get_total_samples(LIBDSDHandle decoder);
 
@@ -47,26 +122,31 @@ DSD_API uint32_t DSD_decoder_get_channels(LIBDSDHandle decoder);
 
 DSD_API uint32_t DSD_decoder_get_bits_per_sample(LIBDSDHandle decoder);
 
+DSD_API uint32_t DSD_decoder_get_block_size_per_channel(LIBDSDHandle decoder);
+
 DSD_API uint32_t DSD_decoder_get_sample_rate(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_get_decode_position(LIBDSDHandle decoder, uint64_t *position);
+DSD_API int32_t DSD_decoder_get_decode_position(LIBDSDHandle decoder,
+                                                uint64_t *position);
 
-
-DSD_API LIBDSDHandleInitStatus DSD_decoder_init_stream(LIBDSDHandle decoder, void *client_data);
+DSD_API DSDDecoderInitStatus DSD_decoder_init_stream(LIBDSDHandle decoder,
+                                                     void *client_data);
 
 DSD_API int32_t DSD_decoder_finish(LIBDSDHandle decoder);
-  
+
 DSD_API int32_t DSD_decoder_flush(LIBDSDHandle decoder);
 
 DSD_API int32_t DSD_decoder_reset(LIBDSDHandle decoder);
 
 DSD_API int32_t DSD_decoder_process_single(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_process_until_end_of_streaminfo(LIBDSDHandle decoder);
+DSD_API int32_t
+DSD_decoder_process_until_end_of_streaminfo(LIBDSDHandle decoder);
 
 DSD_API int32_t DSD_decoder_process_until_end_of_stream(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_seek_absolute(LIBDSDHandle decoder, uint64_t sample);
+DSD_API int32_t DSD_decoder_seek_absolute(LIBDSDHandle decoder,
+                                          uint64_t sample);
 
 #ifdef __cplusplus
 }
