@@ -1,4 +1,4 @@
-/* libdsd - Direct Stream Digital library
+/* libdsd - Direct Stream Digital listreamary
  * Copyright (C) 2017-2017  Hobson Zhu
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,25 +41,32 @@ extern "C" {
 struct BitStream;
 typedef struct BitStream BitStream;
 
-typedef int32_t (*BitStreamReadCallback)(char buffer[], size_t *bytes, void *client_data);
-typedef int32_t (*BitStreamWriteCallback)(const char buffer[], size_t bytes, void *client_data);
+typedef int32_t (*BitStreamReadCallback)(char buffer[], size_t *bytes,
+                                         void *client_data);
+typedef int32_t (*BitStreamWriteCallback)(const char buffer[], size_t bytes,
+                                          void *client_data);
 
 BitStream *BitStream_new(void);
-void BitStream_delete(BitStream *br);
-int32_t BitStream_init(BitStream *br, BitStreamReadCallback read_cb, BitStreamWriteCallback write_cb, void *client_data);
-void BitStream_free(BitStream *br);
-int32_t BitStream_clear(BitStream *br);
+void BitStream_delete(BitStream *stream);
+int32_t BitStream_init(BitStream *stream, BitStreamReadCallback read_callback,
+                       BitStreamWriteCallback write_callback,
+                       void *client_data);
+void BitStream_free(BitStream *stream);
+int32_t BitStream_clear(BitStream *stream);
 
-int32_t BitStream_read_raw_uint32(BitStream *br, uint32_t *val, unsigned bits);
-int32_t BitStream_read_raw_int32(BitStream *br, int32_t *val, unsigned bits);
-int32_t BitStream_read_raw_uint64(BitStream *br, uint64_t *val, unsigned bits);
-int32_t BitStream_read_uint32_little_endian(BitStream *br, uint32_t *val); 
-int32_t BitStream_skip_bits(BitStream *br, unsigned bits);
-int32_t BitStream_skip_byte_block_aligned(BitStream *br, unsigned nvals);
-int32_t BitStream_read_byte_block_aligned(BitStream *br, char *val, unsigned nvals);
-int32_t BitStream_read_unary_unsigned(BitStream *br, unsigned *val);
-int32_t BitStream_read_rice_signed(BitStream *br, int *val, unsigned parameter);
-int32_t BitStream_read_rice_signed_block(BitStream *br, int vals[], unsigned nvals, unsigned parameter);
+int32_t BitStream_is_consumed_byte_aligned(const BitStream *stream);
+uint32_t BitStream_bits_left_for_byte_alignment(const BitStream *stream);
+uint32_t BitStream_get_input_bits_unconsumed(const BitStream *stream);
+
+int32_t BitStream_read_raw_uint32(BitStream *stream, uint32_t *val,
+                                  uint32_t bits);
+int32_t BitStream_read_raw_int32(BitStream *stream, int32_t *val,
+                                 uint32_t bits);
+int32_t BitStream_read_raw_uint64(BitStream *stream, uint64_t *val,
+                                  uint32_t bits);
+int32_t BitStream_read_raw_int64(BitStream *stream, uint64_t *val,
+                                 uint32_t bits);
+int32_t BitStream_skip_bits(BitStream *stream, uint32_t bits);
 
 #ifdef __cplusplus
 }
