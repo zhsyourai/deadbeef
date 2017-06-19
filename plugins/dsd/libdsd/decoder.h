@@ -126,26 +126,26 @@ DSD_API uint32_t DSD_decoder_get_block_size_per_channel(LIBDSDHandle decoder);
 
 DSD_API uint32_t DSD_decoder_get_sample_rate(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_get_decode_position(LIBDSDHandle decoder,
+DSD_API uint32_t DSD_decoder_get_decode_position(LIBDSDHandle decoder,
                                                 uint64_t *position);
 
 DSD_API DSDDecoderInitStatus DSD_decoder_init_stream(LIBDSDHandle decoder,
                                                      void *client_data);
 
-DSD_API int32_t DSD_decoder_finish(LIBDSDHandle decoder);
+DSD_API bool_t DSD_decoder_finish(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_flush(LIBDSDHandle decoder);
+DSD_API bool_t DSD_decoder_flush(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_reset(LIBDSDHandle decoder);
+DSD_API bool_t DSD_decoder_reset(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_process_single(LIBDSDHandle decoder);
+DSD_API bool_t DSD_decoder_process_single(LIBDSDHandle decoder);
 
-DSD_API int32_t
+DSD_API bool_t
 DSD_decoder_process_until_end_of_streaminfo(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_process_until_end_of_stream(LIBDSDHandle decoder);
+DSD_API bool_t DSD_decoder_process_until_end_of_stream(LIBDSDHandle decoder);
 
-DSD_API int32_t DSD_decoder_seek_absolute(LIBDSDHandle decoder,
+DSD_API bool_t DSD_decoder_seek_absolute(LIBDSDHandle decoder,
                                           uint64_t sample);
 
 #ifdef __cplusplus

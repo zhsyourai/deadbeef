@@ -141,7 +141,7 @@ DSD_API uint32_t DSD_decoder_get_block_size_per_channel(LIBDSDHandle decoder) {}
 
 DSD_API uint32_t DSD_decoder_get_sample_rate(DSDLIBDSDHandle handle) {}
 
-DSD_API int32_t DSD_decoder_get_decode_position(DSDLIBDSDHandle handle,
+DSD_API uint32_t DSD_decoder_get_decode_position(DSDLIBDSDHandle handle,
                                                 uint64_t *position) {}
 
 DSD_API DSDDecoderInitStatus DSD_decoder_init_stream(DSDLIBDSDHandle handle,
@@ -154,7 +154,7 @@ DSD_API DSDDecoderInitStatus DSD_decoder_init_stream(DSDLIBDSDHandle handle,
   return DSD_DECODER_INIT_STATUS_OK;
 }
 
-DSD_API int32_t DSD_decoder_finish(DSDLIBDSDHandle handle) {
+DSD_API bool_t DSD_decoder_finish(DSDLIBDSDHandle handle) {
   assert(0 != handle);
   DSDDecoder *decoder = (DSDDecoder *)handle;
   assert(0 != decoder->_private);
@@ -167,7 +167,7 @@ DSD_API int32_t DSD_decoder_finish(DSDLIBDSDHandle handle) {
   return true;
 }
 
-DSD_API int32_t DSD_decoder_flush(DSDLIBDSDHandle handle) {
+DSD_API bool_t DSD_decoder_flush(DSDLIBDSDHandle handle) {
   assert(0 != handle);
   DSDDecoder *decoder = handle;
   assert(0 != decoder->_private);
@@ -182,7 +182,7 @@ DSD_API int32_t DSD_decoder_flush(DSDLIBDSDHandle handle) {
   return true;
 }
 
-DSD_API int32_t DSD_decoder_reset(DSDLIBDSDHandle handle) {
+DSD_API bool_t DSD_decoder_reset(DSDLIBDSDHandle handle) {
   assert(0 != handle);
   DSDDecoder *decoder = handle;
   assert(0 != decoder->_private);
@@ -196,7 +196,7 @@ DSD_API int32_t DSD_decoder_reset(DSDLIBDSDHandle handle) {
   return true;
 }
 
-DSD_API int32_t DSD_decoder_process_single(DSDLIBDSDHandle handle) {
+DSD_API bool_t DSD_decoder_process_single(DSDLIBDSDHandle handle) {
   int32_t got_a_frame;
   assert(0 != handle);
   DSDDecoder *decoder = handle;
@@ -225,7 +225,7 @@ DSD_API int32_t DSD_decoder_process_single(DSDLIBDSDHandle handle) {
   }
 }
 
-DSD_API int32_t
+DSD_API bool_t
 DSD_decoder_process_until_end_of_streaminfo(DSDLIBDSDHandle handle) {
   assert(0 != handle);
   DSDDecoder *decoder = handle;
@@ -248,7 +248,7 @@ DSD_decoder_process_until_end_of_streaminfo(DSDLIBDSDHandle handle) {
   }
 }
 
-DSD_API int32_t
+DSD_API bool_t
 DSD_decoder_process_until_end_of_stream(DSDLIBDSDHandle handle) {
   int32_t dummy;
   assert(0 != handle);
@@ -275,7 +275,7 @@ DSD_decoder_process_until_end_of_stream(DSDLIBDSDHandle handle) {
   }
 }
 
-DSD_API int32_t DSD_decoder_seek_absolute(DSDLIBDSDHandle handle,
+DSD_API bool_t DSD_decoder_seek_absolute(DSDLIBDSDHandle handle,
                                           uint64_t sample) {
   uint64_t length;
   assert(0 != handle);
@@ -324,7 +324,7 @@ DSD_API int32_t DSD_decoder_seek_absolute(DSDLIBDSDHandle handle,
   }
 
   {
-    const FLAC__bool ok = seek_to_absolute_sample_(decoder, length, sample);
+    const bool_t ok = seek_to_absolute_sample_(decoder, length, sample);
     decoder->is_seeking = false;
     return ok;
   }
