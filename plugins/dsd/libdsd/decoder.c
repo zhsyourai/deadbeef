@@ -94,14 +94,14 @@ DSD_API LIBDSDHandle DSD_decoder_new(DSDIOCallbacks callbacks, DSD_FILE_TYPE fil
 
   decoder->_privite = calloc(1, sizeof(DSDDecoderPrivate));
   if (decoder->_privite == 0) {
-    free(coder);
+    free(decoder);
     return 0;
   }
 
   decoder->_privite->callbacks = callbacks;
   decoder->_privite->file_type = file_type;
 
-  return (LIBDSDHandle)coder;
+  return (LIBDSDHandle)decoder;
 }
 
 DSD_API void DSD_decoder_delete(LIBDSDHandle handle) {
