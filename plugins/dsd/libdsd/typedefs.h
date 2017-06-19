@@ -93,39 +93,40 @@ typedef uint64_t dsd_word;
 #define DSD_WORD_ALL_ONES ((uint64_t)DSD_U64L(0xffffffffffffffff))
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+#if defined(__GNUC__) &&                                                       \
+    (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
 
-#define DSD_MXN_(A,B) A##B
-#define MXN_IMPL(A,B,L,R) ({ \
-	__typeof__(A) DSD_MXN_(__a,L) = (A); \
-	__typeof__(B) DSD_MXN_(__b,L) = (B); \
-	DSD_MXN_(__a,L) R DSD_MXN_(__b,L) ? DSD_MXN_(__a,L) : DSD_MXN_(__b,L); \
-	})
+#define DSD_MXN_(A, B) A##B
+#define MXN_IMPL(A, B, L, R)                                                   \
+  ({                                                                           \
+    __typeof__(A) DSD_MXN_(__a, L) = (A);                                      \
+    __typeof__(B) DSD_MXN_(__b, L) = (B);                                      \
+    DSD_MXN_(__a, L) R DSD_MXN_(__b, L) ? DSD_MXN_(__a, L) : DSD_MXN_(__b, L); \
+  })
 
-#define dsd_max(a,b) MXN_IMPL(A,B,__COUNTER__, >)
-#define dsd_min(A,B) MXN_IMPL(A,B,__COUNTER__, <)
+#define dsd_max(a, b) MXN_IMPL(A, B, __COUNTER__, >)
+#define dsd_min(A, B) MXN_IMPL(A, B, __COUNTER__, <)
 
 /* Whatever other unix that has sys/param.h */
 #elif defined(HAVE_SYS_PARAM_H)
 #include <sys/param.h>
-#define dsd_max(a,b) MAX(a,b)
-#define dsd_min(a,b) MIN(a,b)
+#define dsd_max(a, b) MAX(a, b)
+#define dsd_min(a, b) MIN(a, b)
 
 /* Windows VS has them in stdlib.h.. XXX:Untested */
 #elif defined(_MSC_VER)
 #include <stdlib.h>
-#define dsd_max(a,b) __max(a,b)
-#define dsd_min(a,b) __min(a,b)
+#define dsd_max(a, b) __max(a, b)
+#define dsd_min(a, b) __min(a, b)
 #endif
 
 #ifndef MIN
-#define MIN(x,y)	((x) < (y) ? (x) : (y))
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
 #endif
 
 #ifndef MAX
-#define MAX(x,y)	((x) > (y) ? (x) : (y))
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif
-
 
 #ifdef __cplusplus
 }

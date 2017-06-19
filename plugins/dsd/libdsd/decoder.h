@@ -103,14 +103,14 @@ typedef enum {
   DSD_DECODER_ERROR_STATUS_UNPARSEABLE_STREAM
 } DSDDecoderErrorStatus;
 
+typedef enum { DSD_FILE_DSF, DSD_FILE_DSDIFF, DSD_FILE_N } DSD_FILE_TYPE;
+
 extern FLAC_API const char *const DSDDecoderErrorStatusString[];
 
 struct _DSDDecoderPrivate;
-typedef struct {
-    struct _DSDDecoderPrivate *_privite;
-} DSDDecoder;
+typedef struct { struct _DSDDecoderPrivate *_privite; } DSDDecoder;
 
-DSD_API LIBDSDHandle DSD_decoder_new(DSDIOCallbacks callbacks);
+DSD_API LIBDSDHandle DSD_decoder_new(DSDIOCallbacks callbacks, DSD_FILE_TYPE file_type);
 
 DSD_API void DSD_decoder_delete(LIBDSDHandle handle);
 

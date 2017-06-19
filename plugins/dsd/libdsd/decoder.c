@@ -28,7 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #include "decoder.h"
 
 FLAC_API const char *const DSDDecoderStateString[] = {
@@ -81,9 +81,10 @@ typedef struct _DSDDecoderPrivate {
   void *client_data;
   uint64_t samples_decoded;
   uint32_t is_seeking;
+  DSD_FILE_TYPE file_type;
 } DSDDecoderPrivate;
 
-DSD_API LIBDSDHandle DSD_decoder_new(DSDIOCallbacks callbacks) {
+DSD_API LIBDSDHandle DSD_decoder_new(DSDIOCallbacks callbacks, DSD_FILE_TYPE file_type) {
   DSDDecoder *decoder;
 
   decoder = calloc(1, sizeof(DSDDecoder));
@@ -97,7 +98,8 @@ DSD_API LIBDSDHandle DSD_decoder_new(DSDIOCallbacks callbacks) {
     return 0;
   }
 
-  coder->_privite->callbacks = callbacks;
+  decoder->_privite->callbacks = callbacks;
+  decoder->_privite->file_type = file_type;
 
   return (LIBDSDHandle)coder;
 }
