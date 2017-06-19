@@ -28,39 +28,53 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
-#ifndef LIBDSDCALLBACKS_H_INCLUDED
-#define LIBDSDCALLBACKS_H_INCLUDED
 
-#include <stddef.h>
+#include "typedefs.h"
+ /* It is assumed that this header will be included after "config.h". */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if HAVE_BSWAP32			/* GCC and Clang */
 
-typedef size_t (*DSDIOCallback_Read) (void *ptr, size_t size, size_t nmemb, void* client_data);
-
-typedef size_t (*DSDIOCallback_Write) (const void *ptr, size_t size, size_t nmemb, void* client_data);
-
-typedef int (*DSDIOCallback_Seek) (uint64_t offset, int whence, void* client_data);
-
-typedef uint64_t (*DSDIOCallback_Tell) (void* client_data);
-
-typedef int (*DSDIOCallback_Eof) (void* client_data);
-
-typedef DSDIOLengthStatus (*DSDIOCallback_Length)(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data);
-
-typedef struct {
-    DSDIOCallback_Read read;
-    DSDIOCallback_Write write;
-    DSDIOCallback_Seek seek;
-    DSDIOCallback_Tell tell;
-    DSDIOCallback_Eof eof;
-    DSDIOCallback_Length length; 
-} DSDIOCallbacks;
-
-#ifdef __cplusplus
+/* GCC prior to 4.8 didn't provide bswap16 on x86_64 */
+#if ! HAVE_BSWAP16
+static inline unsigned short __builtin_bswap16(unsigned short a)
+{
+	return (a<<8)|(a>>8);
 }
 #endif
+
+#define	ENDSWAP_16(x)		(__builtin_bswap16 (x))
+#define	ENDSWAP_32(x)		(__builtin_bswap32 (x))
+#define	ENDSWAP_64(x)		(__builtin_bswap64 (x))
+
+#ifdef DSD_CPU_X86
+#define 
+#else
+
+#endif
+
+#elif defined _MSC_VER		/* Windows */
+
+#include <stdlib.h>
+
+#define	ENDSWAP_16(x)		(_byteswap_ushort (x))
+#define	ENDSWAP_32(x)		(_byteswap_ulong (x))
+#define	ENDSWAP_64(x)		(_byteswap_uint64 (x))
+
+#elif defined HAVE_BYTESWAP_H		/* Linux */
+
+#include <byteswap.h>
+
+#define	ENDSWAP_16(x)		(bswap_16 (x))
+#define	ENDSWAP_32(x)		(bswap_32 (x))
+#define	ENDSWAP_64(x)		(bswap_64 (x))
+
+#else
+
+#define	ENDSWAP_16(x)		((((x) >> 8) & 0xFF) | (((x) & 0xFF) << 8))
+#define	ENDSWAP_32(x)		((((x) >> 24) & 0xFF) | (((x) >> 8) & 0xFF00) | (((x) & 0xFF00) << 8) | (((x) & 0xFF) << 24))
+#define	ENDSWAP_64(x)		((ENDSWAP_32(((x) >> 32) & 0xFFFFFFFF)) | (ENDSWAP_32((x) & 0xFFFFFFFF) << 32))
+
+#endif
+
 
 #endif

@@ -1,90 +1,75 @@
+/* libdsd - Direct Stream Digital listreamary
+ * Copyright (C) 2017-2017  Hobson Zhu
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * - Neither the name of the Xiph.org Foundation nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "bitstream.h"
+#include <stdlib.h>
+#include <string.h>
 
-static FLAC__bool _bitreader_read_from_callback(BitStream *stream) {
-  unsigned start, end;
+static const unsigned BITSTREAM_DEFAULT_CAPACITY = 65536u / 8; /* in words */
+
+struct BitStream {
+  uint8_t *buffer;
+  uint32_t capacity; // in bytes
+  uint32_t bytes;
+  uint32_t consumed_bytes;
+  uint32_t consumed_bits;
+  BitStreamReadCallback read_callback;
+  BitStreamWriteCallback write_callback;
+  bool_t is_bigendian;
+  void *client_data;
+};
+
+static int32_t _bitreader_read_from_callback(BitStream *stream) {
+  uint8_t start, end;
   size_t bytes;
-  FLAC__byte *target;
+  uint8_t *target;
 
-  /* first shift the unconsumed buffer data toward the front as much as possible
-   */
-  if (stream->consumed_words > 0) {
-    start = stream->consumed_words;
-    end = stream->words + (stream->bytes ? 1 : 0);
-    memmove(stream->buffer, stream->buffer + start,
-            FLAC__BYTES_PER_WORD * (end - start));
+  if (stream->consumed_bytes > 0) {
+    start = stream->consumed_bytes;
+    end = stream->bytes;
+    memmove(stream->buffer, stream->buffer + start, (end - start));
 
-    stream->words -= start;
-    stream->consumed_words = 0;
+    stream->bytes -= start;
+    stream->consumed_bytes = 0;
   }
 
-  /*
-   * set the target for reading, taking into account word alignment and
-   * endianness
-   */
-  bytes =
-      (stream->capacity - stream->words) * FLAC__BYTES_PER_WORD - stream->bytes;
+  bytes = stream->capacity - stream->bytes;
   if (bytes == 0)
-    return false; /* no space left, buffer is too small; see note for
-                     BitStream_DEFAULT_CAPACITY  */
-  target = ((FLAC__byte *)(stream->buffer + stream->words)) + stream->bytes;
+    return false;
+  target = ((uint8_t *)(stream->buffer + stream->bytes));
 
-/* before reading, if the existing reader looks like this (say streamword is 32
- * bits
- * wide)
- *   bitstream :  11 22 33 44 55            stream->words=1 stream->bytes=1
- * (partial
- * tail word is left-justified)
- *   buffer[BE]:  11 22 33 44 55 ?? ?? ??   (shown layed out as bytes
- * sequentially in memory)
- *   buffer[LE]:  44 33 22 11 ?? ?? ?? 55   (?? being don't-care)
- *                               ^^-------target, bytes=3
- * on LE machines, have to byteswap the odd tail word so nothing is
- * overwritten:
- */
-#if WORDS_BIGENDIAN
-#else
-  if (stream->bytes)
-    stream->buffer[stream->words] =
-        SWAP_BE_WORD_TO_HOST(stream->buffer[stream->words]);
-#endif
-
-  /* now it looks like:
-   *   bitstream :  11 22 33 44 55            stream->words=1 stream->bytes=1
-   *   buffer[BE]:  11 22 33 44 55 ?? ?? ??
-   *   buffer[LE]:  44 33 22 11 55 ?? ?? ??
-   *                               ^^-------target, bytes=3
-   */
-
-  /* read in the data; note that the callback may return a smaller number of
-   * bytes */
   if (!stream->read_callback(target, &bytes, stream->client_data))
     return false;
 
-/* after reading bytes 66 77 88 99 AA BB CC DD EE FF from the client:
- *   bitstream :  11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF
- *   buffer[BE]:  11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF ??
- *   buffer[LE]:  44 33 22 11 55 66 77 88 99 AA BB CC DD EE FF ??
- * now have to byteswap on LE machines:
- */
-#if WORDS_BIGENDIAN
-#else
-  end = (stream->words * FLAC__BYTES_PER_WORD + stream->bytes +
-         (unsigned)bytes + (FLAC__BYTES_PER_WORD - 1)) /
-        FLAC__BYTES_PER_WORD;
-  for (start = stream->words; start < end; start++)
-    stream->buffer[start] = SWAP_BE_WORD_TO_HOST(stream->buffer[start]);
-#endif
-
-  /* now it looks like:
-   *   bitstream :  11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF
-   *   buffer[BE]:  11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF ??
-   *   buffer[LE]:  44 33 22 11 88 77 66 55 CC BB AA 99 ?? FF EE DD
-   * finally we'll update the reader values:
-   */
-  end = stream->words * FLAC__BYTES_PER_WORD + stream->bytes + (unsigned)bytes;
-  stream->words = end / FLAC__BYTES_PER_WORD;
-  stream->bytes = end % FLAC__BYTES_PER_WORD;
-
+  stream->bytes += (uint32_t)bytes;
   return true;
 }
 
@@ -100,21 +85,22 @@ void BitStream_delete(BitStream *stream) {
   free(stream);
 }
 
-FLAC__bool BitStream_init(BitStream *stream,
-                          BitStreamReadCallback read_callback,
-                          BitStreamWriteCallback write_callback,
-                          void *client_data) {
+bool_t BitStream_init(BitStream *stream, BitStreamReadCallback read_callback,
+                      BitStreamWriteCallback write_callback,
+                      bool_t is_bigendian, void *client_data) {
   assert(0 != stream);
+  assert(DSD_BITS_PER_WORD >= 32);
 
-  stream->words = stream->bytes = 0;
-  stream->consumed_words = stream->consumed_bits = 0;
-  stream->capacity = BitStream_DEFAULT_CAPACITY;
-  stream->buffer = malloc(sizeof(streamword) * stream->capacity);
+  stream->bytes = 0;
+  stream->consumed_bytes = stream->consumed_bits = 0;
+  stream->capacity = BITSTREAM_DEFAULT_CAPACITY;
+  stream->buffer = malloc(stream->capacity);
   if (stream->buffer == 0)
     return false;
-  stream->read_callback = rcb;
-  stream->client_data = cd;
-
+  stream->read_callback = read_callback;
+  stream->write_callback = write_callback;
+  stream->client_data = client_data;
+  stream->is_bigendian = is_bigendian;
   return true;
 }
 
@@ -125,191 +111,171 @@ void BitStream_free(BitStream *stream) {
     free(stream->buffer);
   stream->buffer = 0;
   stream->capacity = 0;
-  stream->words = stream->bytes = 0;
-  stream->consumed_words = stream->consumed_bits = 0;
+  stream->bytes = 0;
+  stream->consumed_bytes = stream->consumed_bits = 0;
   stream->read_callback = 0;
+  stream->write_callback = 0;
   stream->client_data = 0;
 }
 
-FLAC__bool BitStream_clear(BitStream *stream) {
-  stream->words = stream->bytes = 0;
-  stream->consumed_words = stream->consumed_bits = 0;
+bool_t BitStream_clear(BitStream *stream) {
+  stream->bytes = 0;
+  stream->consumed_bytes = stream->consumed_bits = 0;
   return true;
 }
 
-inline FLAC__bool BitStream_is_consumed_byte_aligned(const BitStream *stream) {
+inline int32_t BitStream_is_consumed_byte_aligned(const BitStream *stream) {
   return ((stream->consumed_bits & 7) == 0);
 }
 
-inline unsigned
+inline uint32_t
 BitStream_bits_left_for_byte_alignment(const BitStream *stream) {
   return 8 - (stream->consumed_bits & 7);
 }
 
-inline unsigned BitStream_get_input_bits_unconsumed(const BitStream *stream) {
-  return (stream->words - stream->consumed_words) * FLAC__BITS_PER_WORD +
-         stream->bytes * 8 - stream->consumed_bits;
+inline uint32_t BitStream_get_input_bits_unconsumed(const BitStream *stream) {
+  return (stream->bytes - stream->consumed_bytes) * 8 - stream->consumed_bits;
 }
 
-FLAC__bool BitStream_read_raw_uint32(BitStream *stream, uint32_t *val,
-                                     unsigned bits) {
-  FLAC__ASSERT(0 != stream);
-  FLAC__ASSERT(0 != stream->buffer);
-
-  FLAC__ASSERT(bits <= 32);
-  FLAC__ASSERT((stream->capacity * FLAC__BITS_PER_WORD) * 2 >= bits);
-  FLAC__ASSERT(stream->consumed_words <= stream->words);
-
-  /* WATCHOUT: code does not work with <32bit words; we can make things much
-   * faster with this assertion */
-  FLAC__ASSERT(FLAC__BITS_PER_WORD >= 32);
-
-  if (bits == 0) { /* OPT: investigate if this can ever happen, maybe change to
-                      assertion */
+bool_t BitStream_read_raw(BitStream *stream, uint8_t *val, uint32_t bits) {
+  assert(0 != stream);
+  assert(0 != stream->buffer);
+  assert((stream->capacity * 8) >= bits);
+  assert(stream->consumed_bytes <= stream->bytes);
+  if (bits == 0) {
     *val = 0;
     return true;
   }
 
-  while ((stream->words - stream->consumed_words) * FLAC__BITS_PER_WORD +
-             stream->bytes * 8 - stream->consumed_bits <
+  while ((stream->bytes - stream->consumed_bytes) * 8 - stream->consumed_bits <
          bits) {
     if (!_bitreader_read_from_callback(stream))
       return false;
   }
-  if (stream->consumed_words <
-      stream->words) { /* if we've not consumed up to a partial tail word... */
-    /* OPT: taking out the consumed_bits==0 "else" case below might make things
-     * faster if less code allows the compiler to inline this function */
-    if (stream->consumed_bits) {
-      /* this also works when consumed_bits==0, it's just a little slower than
-       * necessary for that case */
-      const unsigned n = FLAC__BITS_PER_WORD - stream->consumed_bits;
-      const brword word = stream->buffer[stream->consumed_words];
-      if (bits < n) {
-        *val = (uint32_t)(
-            (word & (FLAC__WORD_ALL_ONES >> stream->consumed_bits)) >>
-            (n - bits)); /* The result has <= 32 non-zero bits */
-        stream->consumed_bits += bits;
-        return true;
-      }
-      /* (FLAC__BITS_PER_WORD - stream->consumed_bits <= bits) ==>
-       * (FLAC__WORD_ALL_ONES >> stream->consumed_bits) has no more than 'bits'
-       * non-zero bits */
-      *val = (uint32_t)(word & (FLAC__WORD_ALL_ONES >> stream->consumed_bits));
-      bits -= n;
-      crc16_update_word_(stream, word);
-      stream->consumed_words++;
-      stream->consumed_bits = 0;
-      if (bits) { /* if there are still bits left to read, there have to be less
-                     than 32 so they will all be in the next word */
-        *val <<= bits;
-        *val |= (uint32_t)(stream->buffer[stream->consumed_words] >>
-                           (FLAC__BITS_PER_WORD - bits));
-        stream->consumed_bits = bits;
-      }
-      return true;
-    } else { /* stream->consumed_bits == 0 */
-      const brword word = stream->buffer[stream->consumed_words];
-      if (bits < FLAC__BITS_PER_WORD) {
-        *val = (uint32_t)(word >> (FLAC__BITS_PER_WORD - bits));
-        stream->consumed_bits = bits;
-        return true;
-      }
-      /* at this point bits == FLAC__BITS_PER_WORD == 32; because of previous
-       * assertions, it can't be larger */
-      *val = (uint32_t)word;
-      crc16_update_word_(stream, word);
-      stream->consumed_words++;
-      return true;
-    }
-  } else {
-    /* in this case we're starting our read at a partial tail word;
-     * the reader has guaranteed that we have at least 'bits' bits
-     * available to read, which makes this case simpler.
-     */
-    /* OPT: taking out the consumed_bits==0 "else" case below might make things
-     * faster if less code allows the compiler to inline this function */
-    if (stream->consumed_bits) {
-      /* this also works when consumed_bits==0, it's just a little slower than
-       * necessary for that case */
-      FLAC__ASSERT(stream->consumed_bits + bits <= stream->bytes * 8);
-      *val = (uint32_t)((stream->buffer[stream->consumed_words] &
-                         (FLAC__WORD_ALL_ONES >> stream->consumed_bits)) >>
-                        (FLAC__BITS_PER_WORD - stream->consumed_bits - bits));
-      stream->consumed_bits += bits;
-      return true;
+
+  uint32_t loop_bits = 0;
+  while (bits) {
+    if (bits / 8) {
+      loop_bits = 8;
+      bits -= 8;
     } else {
-      *val = (uint32_t)(stream->buffer[stream->consumed_words] >>
-                        (FLAC__BITS_PER_WORD - bits));
-      stream->consumed_bits += bits;
-      return true;
+      loop_bits = bits;
+      bits = 0;
+    }
+    if (stream->consumed_bytes < stream->bytes) {
+      const uint8_t byte = stream->buffer[stream->consumed_bytes];
+      if (stream->consumed_bits) {
+        const uint32_t n = 8 - stream->consumed_bits;
+        if (loop_bits < n) {
+          *val =
+              (uint8_t)((byte & (DSD_BYTE_ALL_ONES >> stream->consumed_bits)) >>
+                        (n - loop_bits));
+          stream->consumed_bits += loop_bits;
+          return true;
+        }
+        *val = (uint8_t)(byte & (DSD_BYTE_ALL_ONES >> stream->consumed_bits));
+        loop_bits -= n;
+        stream->consumed_bytes++;
+        stream->consumed_bits = 0;
+        if (0 < loop_bits && loop_bits <= n) {
+          *val <<= loop_bits;
+          *val |= (uint8_t)(stream->buffer[stream->consumed_bytes] >>
+                            (8 - loop_bits));
+          stream->consumed_bits = loop_bits;
+        }
+        continue;
+      } else {
+        if (loop_bits < 8) {
+          *val = (uint8_t)(byte >> (8 - loop_bits));
+          stream->consumed_bits = loop_bits;
+          return true;
+        }
+        *val = (uint8_t)byte;
+        stream->consumed_bytes++;
+        continue;
+      }
+    } else {
+      if (stream->consumed_bits) {
+        assert(stream->consumed_bits + loop_bits <= 8);
+        *val = (uint8_t)((stream->buffer[stream->consumed_bytes] &
+                          (DSD_BYTE_ALL_ONES >> stream->consumed_bits)) >>
+                         (8 - stream->consumed_bits - loop_bits));
+        stream->consumed_bits += loop_bits;
+        return true;
+      } else {
+        *val = (uint8_t)(stream->buffer[stream->consumed_bytes] >>
+                         (8 - loop_bits));
+        stream->consumed_bits += loop_bits;
+        return true;
+      }
     }
   }
 }
 
-int32_t BitStream_read_raw_int32(BitStream *stream, int32_t *val,
-                                 uint32_t bits) {
-  uint32_t uval, mask;
-  /* OPT: inline raw uint32 code here, or make into a macro if possible in the
-   * .h file */
-  if (!BitStream_read_raw_uint32(br, &uval, bits))
+bool_t BitStream_read_uint32(BitStream *stream, uint32_t *val) {
+  uint32_t uval;
+  if (!BitStream_read_raw(stream, &uval, 32))
     return false;
-  /* sign-extend *val assuming it is currently bits wide. */
-  /* From: https://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
-   */
-  mask = 1u << (bits - 1);
-  *val = (uval ^ mask) - mask;
+  *val = uval;
   return true;
 }
 
-int32_t BitStream_read_raw_uint64(BitStream *stream, uint64_t *val,
-                                  uint32_t bits) {
+bool_t BitStream_read_int32(BitStream *stream, int32_t *val, uint32_t bits) {
+  uint32_t uval;
+  if (!BitStream_read_raw(stream, &uval, 32))
+    return false;
+  *val = uval;
+  return true;
+}
+
+bool_t BitStream_read_uint64(BitStream *stream, uint64_t *val) {
   uint32_t hi, lo;
-
-  if (bits > 32) {
-    if (!BitStream_read_raw_uint32(br, &hi, bits - 32))
-      return false;
-    if (!BitStream_read_raw_uint32(br, &lo, 32))
-      return false;
-    *val = hi;
-    *val <<= 32;
-    *val |= lo;
-  } else {
-    if (!BitStream_read_raw_uint32(br, &lo, bits))
-      return false;
-    *val = lo;
-  }
+  if (!BitStream_read_raw(stream, &hi, 32))
+    return false;
+  if (!BitStream_read_raw(stream, &lo, 32))
+    return false;
+  *val = hi;
+  *val <<= 32;
+  *val |= lo;
   return true;
 }
-int32_t BitStream_read_raw_int64(BitStream *stream, uint64_t *val,
-                                 uint32_t bits) {}
-int32_t BitStream_skip_bits(BitStream *stream, uint32_t bits) {
-  /*
-         * OPT: a faster implementation is possible but probably not that useful
-         * since this is only called a couple of times in the metadata readers.
-         */
-  FLAC__ASSERT(0 != br);
-  FLAC__ASSERT(0 != br->buffer);
+
+bool_t BitStream_read_int64(BitStream *stream, int64_t *val) {
+  uint32_t hi, lo;
+  if (!BitStream_read_raw(stream, &hi, 32))
+    return false;
+  if (!BitStream_read_raw(stream, &lo, 32))
+    return false;
+  *val = hi;
+  *val <<= 32;
+  *val |= lo;
+  return true;
+}
+
+bool_t BitStream_skip_bits(BitStream *stream, uint32_t bits) {
+  assert(0 != stream);
+  assert(0 != stream->buffer);
 
   if (bits > 0) {
-    const unsigned n = br->consumed_bits & 7;
-    unsigned m;
-    FLAC__uint32 x;
+    const uint32_t n = stream->consumed_bits & 7;
+    uint32_t m;
+    uint32_t x;
 
     if (n != 0) {
-      m = flac_min(8 - n, bits);
-      if (!BitStream_read_raw_uint32(br, &x, m))
+      m = dsd_min(8 - n, bits);
+      if (!BitStream_read_raw(stream, &x, m))
         return false;
       bits -= m;
     }
-    m = bits / 8;
-    if (m > 0) {
-      if (!BitStream_skip_byte_block_aligned_no_crc(br, m))
+    m = bits / 32;
+    while (m--) {
+      if (!BitStream_read_raw(stream, &x, 32))
         return false;
-      bits %= 8;
+      bits -= 32;
     }
+    bits %= 32;
     if (bits > 0) {
-      if (!BitStream_read_raw_uint32(br, &x, bits))
+      if (!BitStream_read_raw(stream, &x, bits))
         return false;
     }
   }

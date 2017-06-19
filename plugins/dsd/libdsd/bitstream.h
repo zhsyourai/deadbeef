@@ -47,26 +47,34 @@ typedef int32_t (*BitStreamWriteCallback)(const char buffer[], size_t bytes,
                                           void *client_data);
 
 BitStream *BitStream_new(void);
-void BitStream_delete(BitStream *stream);
-int32_t BitStream_init(BitStream *stream, BitStreamReadCallback read_callback,
-                       BitStreamWriteCallback write_callback,
-                       void *client_data);
-void BitStream_free(BitStream *stream);
-int32_t BitStream_clear(BitStream *stream);
 
-int32_t BitStream_is_consumed_byte_aligned(const BitStream *stream);
+void BitStream_delete(BitStream *stream);
+
+bool_t BitStream_init(BitStream *stream, BitStreamReadCallback read_callback,
+                       BitStreamWriteCallback write_callback, bool_t is_bigendian,
+                       void *client_data);
+
+void BitStream_free(BitStream *stream);
+
+bool_t BitStream_clear(BitStream *stream);
+
+bool_t BitStream_is_consumed_byte_aligned(const BitStream *stream);
+
 uint32_t BitStream_bits_left_for_byte_alignment(const BitStream *stream);
+
 uint32_t BitStream_get_input_bits_unconsumed(const BitStream *stream);
 
-int32_t BitStream_read_raw_uint32(BitStream *stream, uint32_t *val,
-                                  uint32_t bits);
-int32_t BitStream_read_raw_int32(BitStream *stream, int32_t *val,
-                                 uint32_t bits);
-int32_t BitStream_read_raw_uint64(BitStream *stream, uint64_t *val,
-                                  uint32_t bits);
-int32_t BitStream_read_raw_int64(BitStream *stream, uint64_t *val,
-                                 uint32_t bits);
-int32_t BitStream_skip_bits(BitStream *stream, uint32_t bits);
+bool_t BitStream_read_raw(BitStream *stream, uint8_t *val, uint32_t bits);
+
+bool_t BitStream_read_uint32(BitStream *stream, uint32_t *val);
+
+bool_t BitStream_read_int32(BitStream *stream, int32_t *val);
+
+bool_t BitStream_read_uint64(BitStream *stream, uint64_t *val);
+
+bool_t BitStream_read_int64(BitStream *stream, uint64_t *val);
+
+bool_t BitStream_skip_bits(BitStream *stream, uint32_t bits);
 
 #ifdef __cplusplus
 }
