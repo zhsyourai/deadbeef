@@ -1,4 +1,4 @@
-/* libdsd - Direct Stream Digital listreamary
+/* libdsd - Direct Stream Digital library
  * Copyright (C) 2017-2017  Hobson Zhu
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,56 +28,55 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef LIBDSD_ENDIAN_H_INCLUDED
+#define LIBDSD_ENDIAN_H_INCLUDED
 
-#ifndef LIBDSD_BIT_STREAM_H_INCLUDED
-#define LIBDSD_BIT_STREAM_H_INCLUDED
+#include "../../include/typedefs.h"
+ /* It is assumed that this header will be included after "config.h". */
 
-#include "typedefs.h"
+#if HAVE_BSWAP32			/* GCC and Clang */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct BitStream;
-typedef struct BitStream BitStream;
-
-typedef int32_t (*BitStreamReadCallback)(char buffer[], size_t *bytes,
-                                         void *client_data);
-typedef int32_t (*BitStreamWriteCallback)(const char buffer[], size_t bytes,
-                                          void *client_data);
-
-BitStream *BitStream_new(void);
-
-void BitStream_delete(BitStream *stream);
-
-bool_t BitStream_init(BitStream *stream, BitStreamReadCallback read_callback,
-                       BitStreamWriteCallback write_callback, bool_t is_bigendian,
-                       void *client_data);
-
-void BitStream_free(BitStream *stream);
-
-bool_t BitStream_clear(BitStream *stream);
-
-bool_t BitStream_is_consumed_byte_aligned(const BitStream *stream);
-
-uint32_t BitStream_bits_left_for_byte_alignment(const BitStream *stream);
-
-uint32_t BitStream_get_input_bits_unconsumed(const BitStream *stream);
-
-bool_t BitStream_read_raw(BitStream *stream, uint8_t *val, uint32_t bits);
-
-bool_t BitStream_read_uint32(BitStream *stream, uint32_t *val);
-
-bool_t BitStream_read_int32(BitStream *stream, int32_t *val);
-
-bool_t BitStream_read_uint64(BitStream *stream, uint64_t *val);
-
-bool_t BitStream_read_int64(BitStream *stream, uint64_t *val);
-
-bool_t BitStream_skip_bits(BitStream *stream, uint32_t bits);
-
-#ifdef __cplusplus
+/* GCC prior to 4.8 didn't provide bswap16 on x86_64 */
+#if ! HAVE_BSWAP16
+static inline unsigned short __builtin_bswap16(unsigned short a)
+{
+	return (a<<8)|(a>>8);
 }
 #endif
+
+#define	ENDSWAP_16(x)		(__builtin_bswap16 (x))
+#define	ENDSWAP_32(x)		(__builtin_bswap32 (x))
+#define	ENDSWAP_64(x)		(__builtin_bswap64 (x))
+
+#ifdef DSD_CPU_X86
+#define 
+#else
+
+#endif
+
+#elif defined _MSC_VER		/* Windows */
+
+#include <stdlib.h>
+
+#define	ENDSWAP_16(x)		(_byteswap_ushort (x))
+#define	ENDSWAP_32(x)		(_byteswap_ulong (x))
+#define	ENDSWAP_64(x)		(_byteswap_uint64 (x))
+
+#elif defined HAVE_BYTESWAP_H		/* Linux */
+
+#include <byteswap.h>
+
+#define	ENDSWAP_16(x)		(bswap_16 (x))
+#define	ENDSWAP_32(x)		(bswap_32 (x))
+#define	ENDSWAP_64(x)		(bswap_64 (x))
+
+#else
+
+#define	ENDSWAP_16(x)		((((x) >> 8) & 0xFF) | (((x) & 0xFF) << 8))
+#define	ENDSWAP_32(x)		((((x) >> 24) & 0xFF) | (((x) >> 8) & 0xFF00) | (((x) & 0xFF00) << 8) | (((x) & 0xFF) << 24))
+#define	ENDSWAP_64(x)		((ENDSWAP_32(((x) >> 32) & 0xFFFFFFFF)) | (ENDSWAP_32((x) & 0xFFFFFFFF) << 32))
+
+#endif
+
 
 #endif

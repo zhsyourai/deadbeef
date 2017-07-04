@@ -32,6 +32,7 @@
 #define LIBDSD_TYPEDEFS_H_INCLUDED
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +40,7 @@ extern "C" {
 
 typedef void *LIBDSDHandle;
 
-typedef uint32_t ID;
+typedef struct ID { char x[4]; } ID;
 
 typedef int bool_t;
 
@@ -118,14 +119,6 @@ typedef uint64_t dsd_word;
 #include <stdlib.h>
 #define dsd_max(a, b) __max(a, b)
 #define dsd_min(a, b) __min(a, b)
-#endif
-
-#ifndef MIN
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#endif
-
-#ifndef MAX
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
 #ifdef __cplusplus

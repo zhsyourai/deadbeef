@@ -44,7 +44,12 @@ typedef struct {
   uint32_t channels;
   uint32_t bits_per_sample;
   uint64_t total_samples;
-  uint32_t block_bytes_per_channel
+  uint32_t block_bytes_per_channel;
+  uint32_t block_bytes_all_channel;
+  bool_t is_compress;
+  bool_t is_lsb;
+  uint32_t frame_rate;
+  uint64_t total_frames;
 } DSDStreamInfo;
 
 DSD_API int DSD_metadata_get_title(LIBDSDHandle handle, char *str,
@@ -52,8 +57,6 @@ DSD_API int DSD_metadata_get_title(LIBDSDHandle handle, char *str,
 
 DSD_API int DSD_metadata_get_artist(LIBDSDHandle handle, char *str,
                                     size_t length);
-
-DSD_API int DSD_metadata_get_artist(LIBDSDHandle handle, DSDStreamInfo *streaminfo);
 
 #ifdef __cplusplus
 }

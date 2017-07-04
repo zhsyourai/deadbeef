@@ -28,7 +28,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "libdsd.h"
-#include "metadata.h"
-#include <stdlib.h>
+#ifndef LIBDSD_H_INCLUDED
+#define LIBDSD_H_INCLUDED
 
+#include "typedefs.h"
+#include "export.h"
+#include "metadata.h"
+#include "decoder.h"
+#include "callbacks.h"
+
+#endif

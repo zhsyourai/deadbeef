@@ -29,52 +29,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "typedefs.h"
- /* It is assumed that this header will be included after "config.h". */
+#ifndef LIBDSD_OUTPUT_H
+#define LIBDSD_OUTPUT_H
+#include "../../include/typedefs.h"
+#include "../../include/metadata.h"
 
-#if HAVE_BSWAP32			/* GCC and Clang */
+struct OutputPackage;
+typedef struct OutputPackage OutputPackage;
 
-/* GCC prior to 4.8 didn't provide bswap16 on x86_64 */
-#if ! HAVE_BSWAP16
-static inline unsigned short __builtin_bswap16(unsigned short a)
-{
-	return (a<<8)|(a>>8);
-}
-#endif
+OutputPackage *OutputPackage_new();
 
-#define	ENDSWAP_16(x)		(__builtin_bswap16 (x))
-#define	ENDSWAP_32(x)		(__builtin_bswap32 (x))
-#define	ENDSWAP_64(x)		(__builtin_bswap64 (x))
+bool_t OutputPackage_init(OutputPackage *package, const DSDStreamInfo *streamInfo);
 
-#ifdef DSD_CPU_X86
-#define 
-#else
+void OutputPackage_delete(OutputPackage *package);
 
-#endif
+bool_t OutputPackage_dop(OutputPackage *package, const uint8_t *const in_buf[], uint32_t in_buf_len, uint32_t *out_buf);
 
-#elif defined _MSC_VER		/* Windows */
+bool_t OutputPackage_native(OutputPackage *package, const uint8_t *const in_buf[], uint32_t in_buf_len, uint32_t *out_buf);
 
-#include <stdlib.h>
-
-#define	ENDSWAP_16(x)		(_byteswap_ushort (x))
-#define	ENDSWAP_32(x)		(_byteswap_ulong (x))
-#define	ENDSWAP_64(x)		(_byteswap_uint64 (x))
-
-#elif defined HAVE_BYTESWAP_H		/* Linux */
-
-#include <byteswap.h>
-
-#define	ENDSWAP_16(x)		(bswap_16 (x))
-#define	ENDSWAP_32(x)		(bswap_32 (x))
-#define	ENDSWAP_64(x)		(bswap_64 (x))
-
-#else
-
-#define	ENDSWAP_16(x)		((((x) >> 8) & 0xFF) | (((x) & 0xFF) << 8))
-#define	ENDSWAP_32(x)		((((x) >> 24) & 0xFF) | (((x) >> 8) & 0xFF00) | (((x) & 0xFF00) << 8) | (((x) & 0xFF) << 24))
-#define	ENDSWAP_64(x)		((ENDSWAP_32(((x) >> 32) & 0xFFFFFFFF)) | (ENDSWAP_32((x) & 0xFFFFFFFF) << 32))
-
-#endif
-
-
-#endif
+#endif //LIBDSD_OUTPUT_H

@@ -32,23 +32,64 @@
 #ifndef LIBDSDCALLBACKS_H_INCLUDED
 #define LIBDSDCALLBACKS_H_INCLUDED
 
-#include <stddef.h>
+#include "typedefs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef enum {
+    DSD_DECODER_READ_STATUS_CONTINUE,
+    DSD_DECODER_READ_STATUS_END_OF_STREAM,
+    DSD_DECODER_READ_STATUS_ABORT
+} DSDDecoderReadStatus;
 
-typedef size_t (*DSDIOCallback_Read) (void *ptr, size_t size, size_t nmemb, void* client_data);
+typedef enum {
+    DSD_DECODER_SEEK_STATUS_OK,
+    DSD_DECODER_SEEK_STATUS_ERROR,
+    DSD_DECODER_SEEK_STATUS_UNSUPPORTED
+} DSDDecoderSeekStatus;
 
-typedef size_t (*DSDIOCallback_Write) (const void *ptr, size_t size, size_t nmemb, void* client_data);
+typedef enum {
+    DSD_DECODER_TELL_STATUS_OK,
+    DSD_DECODER_TELL_STATUS_ERROR,
+    DSD_DECODER_TELL_STATUS_UNSUPPORTED
+} DSDDecoderTellStatus;
 
-typedef int (*DSDIOCallback_Seek) (uint64_t offset, int whence, void* client_data);
+typedef enum {
+    DSD_DECODER_LENGTH_STATUS_OK,
+    DSD_DECODER_LENGTH_STATUS_ERROR,
+    DSD_DECODER_LENGTH_STATUS_UNSUPPORTED
+} DSDDecoderLengthStatus;
 
-typedef uint64_t (*DSDIOCallback_Tell) (void* client_data);
+typedef enum {
+    DSD_DECODER_WRITE_STATUS_CONTINUE,
+    DSD_DECODER_WRITE_STATUS_ABORT
+} DSDDecoderWriteStatus;
 
-typedef int (*DSDIOCallback_Eof) (void* client_data);
+typedef enum {
+    DSD_DECODER_ERROR_STATUS_LOST_SYNC,
+    DSD_DECODER_ERROR_STATUS_BAD_HEADER,
+    DSD_DECODER_ERROR_STATUS_FRAME_CRC_MISMATCH,
+    DSD_DECODER_ERROR_STATUS_UNPARSEABLE_STREAM
+} DSDDecoderErrorStatus;
 
-typedef DSDIOLengthStatus (*DSDIOCallback_Length)(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data);
+typedef enum {
+    DSD_DECODER_EOF_STATUS_REACH,
+    DSD_DECODER_EOF_STATUS_NOT_REACH,
+    DSD_DECODER_EOF_STATUS_UNSUPPORTED
+} DSDDecoderEOFStatus;
+
+typedef DSDDecoderReadStatus (*DSDIOCallback_Read) (void *ptr, size_t *size, void* client_data);
+
+typedef DSDDecoderWriteStatus (*DSDIOCallback_Write) (const void *buffer, uint32_t sample_count, void* client_data);
+
+typedef DSDDecoderSeekStatus (*DSDIOCallback_Seek) (uint64_t offset, int whence, void* client_data);
+
+typedef DSDDecoderTellStatus (*DSDIOCallback_Tell) (uint64_t *position, void* client_data);
+
+typedef DSDDecoderEOFStatus (*DSDIOCallback_Eof) (void* client_data);
+
+typedef DSDDecoderLengthStatus (*DSDIOCallback_Length)(uint64_t *length, void *client_data);
 
 typedef struct {
     DSDIOCallback_Read read;
@@ -56,7 +97,7 @@ typedef struct {
     DSDIOCallback_Seek seek;
     DSDIOCallback_Tell tell;
     DSDIOCallback_Eof eof;
-    DSDIOCallback_Length length; 
+    DSDIOCallback_Length length;
 } DSDIOCallbacks;
 
 #ifdef __cplusplus

@@ -1,0 +1,3 @@
+file(GLOB_RECURSE SOURCE_FILES ./*.c ./*.h)
+add_library(dstdec STATIC ${SOURCE_FILES})
+set_property(TARGET dstdec PROPERTY POSITION_INDEPENDENT_CODE ON)

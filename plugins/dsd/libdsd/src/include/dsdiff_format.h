@@ -28,11 +28,11 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #ifndef LIBDSD_DSDIFF_H_INCLUDED
 #define LIBDSD_DSDIFF_H_INCLUDED
 
-#include "typedefs.h"
+#include "../../include/typedefs.h"
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -55,10 +55,10 @@ extern "C" {
 #define CHUNK_MANF "MANF"
 
 typedef struct {
-  ID ckID;            // chunkid
-  uint64_tckDataSize; // chunk data size, in bytes (not include ckID and this
-                      // field)
-  uint8_t ckData[0];  // data
+  ID ckID;             // chunk id
+  uint64_t ckDataSize; // chunk data size, in bytes (not include ckID and this
+                       // field)
+  uint8_t ckData[0];   // data
 } __attribute((packed)) Chunk;
 
 /***********************************
@@ -73,6 +73,10 @@ typedef struct {
   Chunk frm8Chunks[0]; // chunks
 } __attribute((packed)) FormDSDChunk;
 
+const ID DSDIFF_ID = {'F', 'R', 'M', '8'};
+const ID FORMTYPE_ID = {'D', 'S', 'D', ' '};
+
+
 /***********************************
  *      FORMAT VERSION CHUNK       *
  ***********************************/
@@ -82,6 +86,8 @@ typedef struct {
   uint64_t ckDataSize; // 4
   uint32_t version;    // 0x01050000 version 1.5.0.0 DSDIFF
 } __attribute((packed)) FormatVersionChunk;
+
+const ID FVER_ID = {'F', 'V', 'E', 'R'};
 
 /***********************************
  *         PROPERTY CHUNK          *
@@ -94,20 +100,27 @@ typedef struct {
   Chunk propChunks[0]; // local chunks
 } __attribute((packed)) PropertyChunk;
 
+const ID PROP_ID = {'P', 'R', 'O', 'P'};
+
+const ID PROP_SND_TYPE_ID = {'S', 'N', 'D', ' '};
+
 typedef struct {
   ID ckID;             // 'FS '
   uint64_t ckDataSize; // 4
   uint32_t sampleRate; // sample rate in [Hz]
 } __attribute((packed)) SampleRateChunk;
 
-#define PREDEF_CHID_SLFT 'SLFT'
-#define PREDEF_CHID_SRGT 'SRGT'
-#define PREDEF_CHID_MLFT 'MLFT'
-#define PREDEF_CHID_MRGT 'MRGT'
-#define PREDEF_CHID_LS 'LS '
-#define PREDEF_CHID_RS 'RS '
-#define PREDEF_CHID_C 'C '
-#define PREDEF_CHID_LFE 'LFE '
+const ID PROP_FS_ID = {'F', 'S', ' ', ' '};
+
+
+#define PREDEF_CHID_SLFT "SLFT"
+#define PREDEF_CHID_SRGT "SRGT"
+#define PREDEF_CHID_MLFT "MLFT"
+#define PREDEF_CHID_MRGT "MRGT"
+#define PREDEF_CHID_LS "LS "
+#define PREDEF_CHID_RS "RS "
+#define PREDEF_CHID_C "C "
+#define PREDEF_CHID_LFE "LFE "
 
 typedef struct {
   ID ckID;              // 'CHNL'
@@ -116,13 +129,19 @@ typedef struct {
   ID chID[0];           // channels ID's
 } __attribute((packed)) ChannelsChunk;
 
+const ID PROP_CHNL_ID = {'C', 'H', 'N', 'L'};
+
 typedef struct {
   ID ckID;             // 'CMPR'
-  uint64_t CkDataSize; // data size, in bytes (not include ckID and this field)
+  uint64_t ckDataSize; // data size, in bytes (not include ckID and this field)
   ID compressionType;  // compression ID code
-  uint8_t Count;       // length of the compression name
-  int8_t byte compressionName[0]; // human readable type name
+  uint8_t count;       // length of the compression name
+  uint8_t compressionName[0]; // human readable type name
 } __attribute((packed)) CompressionTypeChunk;
+
+const ID PROP_CMPR_ID = {'C', 'M', 'P', 'R'};
+const ID PROP_CMPR_DSD_ID = {'D', 'S', 'D', ' '};
+const ID PROP_CMPR_DST_ID = {'D', 'S', 'T', ' '};
 
 typedef struct {
   ID ckID;             // 'ABSS'
@@ -133,11 +152,15 @@ typedef struct {
   uint32_t samples;    // samples
 } __attribute((packed)) AbsoluteStartTimeChunk;
 
+const ID PROP_ABSS_ID = {'A', 'B', 'S', 'S'};
+
 typedef struct {
   ID ckID;             // 'LSCO'
   uint64_t ckDataSize; // 2
   uint16_t lsConfig;   // loudspeaker configuration
 } __attribute((packed)) LoudspeakerConfigurationChunk;
+
+const ID PROP_LSCO_ID = {'L', 'S', 'C', 'O'};
 
 /***********************************
  *      DSD SOUND DATA CHUNK       *
@@ -149,6 +172,8 @@ typedef struct {
   uint8_t DSDsoundData[0]; // (interleaved) DSD data
 } __attribute((packed)) DSDSoundDataChunk;
 
+const ID DSD_SOUND_DATA_ID = {'D', 'S', 'D', ' '};
+
 /***********************************
  *      DST SOUND DATA CHUNK       *
  ***********************************/
@@ -156,14 +181,10 @@ typedef struct {
 typedef struct {
   ID ckID;             // 'DST '
   uint64_t ckDataSize; // data size, in bytes (not include ckID and this field)
-  Chunk DstChunks[0];  // container
+  Chunk chunks[0];  // container
 } __attribute((packed)) DSTSoundDataChunk;
 
-typedef struct {
-  ID ckID;             // 'DSTF'
-  uint64_t ckDataSize; // data size, in bytes (not include ckID and this field)
-  uint8_t DSTsoundData[0]; // The DST data for one frame
-} __attribute((packed)) DSTFrameDataChunk;
+const ID DST_SOUND_DATA_ID = {'D', 'S', 'T', ' '};
 
 typedef struct {
   ID ckID;             // 'FRTE'
@@ -172,21 +193,32 @@ typedef struct {
   uint16_t frameRate;  // DST frame rate per second
 } __attribute((packed)) DSTFrameInformationChunk;
 
+const ID DST_FRAME_INFO_ID = {'F', 'R', 'T', 'E'};
+
+typedef struct {
+  ID ckID;             // 'DSTF'
+  uint64_t ckDataSize; // data size, in bytes (not include ckID and this field)
+  uint8_t soundData[0]; // The DST data for one frame
+} __attribute((packed)) DSTFrameDataChunk;
+
+const ID DST_DSTF_ID = {'D', 'S', 'T', 'F'};
+
 typedef struct {
   ID ckID; // 'DSTC'
   uint64_t ckDataSize;
   uint8_t crcData[0]; // the value of the CRC
 } __attribute((packed)) DSTFrameCrcChunk;
 
-typedef struct {
-  uint64_t offset; // offset in the file [in bytes] of the sound in the DST
-                   // Sound Data Chunk
-  uint32_t length; // length of the sound in bytes
-} __attribute((packed)) DSTFrameIndex;
+const ID DST_DSTC_ID = {'D', 'S', 'T', 'C'};
 
 /***********************************
  *      DST SOUND INDEX CHUNK      *
  ***********************************/
+typedef struct {
+  uint64_t offset; // offset in the file [in bytes] of the sound in the DST
+  // Sound Data Chunk
+  uint32_t length; // length of the sound in bytes
+} __attribute((packed)) DSTFrameIndex;
 
 typedef struct {
   ID ckID;             // 'DSTI'
@@ -197,17 +229,9 @@ typedef struct {
 /***********************************
  *         COMMENTS CHUNK          *
  ***********************************/
-
-typedef struct {
-  ID ckID;              // 'COMT'
-  uint64_t ckDataSize;  // data size, in bytes (not include ckID and this field)
-  uint16_t numComments; // number of comments
-  Comment comments[0];  // the concatenated comments
-} __attribute((packed)) CommentsChunk;
-
 typedef struct {
   uint16_t timeStampYear;   // creation year
-  uint8_t TimeStampMonth;   // creation month
+  uint8_t timeStampMonth;   // creation month
   uint8_t timeStampDay;     // creation day
   uint8_t timeStampHour;    // creation hour
   uint8_t timeStampMinutes; // creation minutes
@@ -216,6 +240,13 @@ typedef struct {
   uint32_t count;           // string length
   int8_t commentText[0];    // text
 } __attribute((packed)) Comment;
+
+typedef struct {
+  ID ckID;              // 'COMT'
+  uint64_t ckDataSize;  // data size, in bytes (not include ckID and this field)
+  uint16_t numComments; // number of comments
+  Comment comments[0];  // the concatenated comments
+} __attribute((packed)) CommentsChunk;
 
 /***********************************
  * EDITED MASTER INFORMATION CHUNK *

@@ -28,12 +28,12 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
-#ifndef LIBDSD_DSDIFF_H_INCLUDED
-#define LIBDSD_DSDIFF_H_INCLUDED
 
-#include "typedefs.h"
+#ifndef LIBDSD_DSF_H_INCLUDED
+#define LIBDSD_DSF_H_INCLUDED
+
 #include <stddef.h>
+#include "../../include/typedefs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,14 +43,16 @@ extern "C" {
  *           CHUNK DEFINE          *
  ***********************************/
 typedef struct {
-  ID ckID;                    // chunkid 'dsd '
+  ID ckID;                    // chunk id 'DSD '
   uint64_t ckSize;            // chunk size, in bytes
-  uint64_t ckTotalfileSize;   // total filoe size, in bytes
+  uint64_t ckTotalFileSize;   // total filo size, in bytes
   uint64_t ckPtMetadataChunk; // point to metadata chunk if not exist set to 0
 } __attribute((packed)) DSDChunk;
 
+const ID DSF_ID = {'D', 'S', 'D', ' '};
+
 typedef struct {
-  ID ckID;                        // chunkid 'fmt '
+  ID ckID;                        // chunk id 'fmt '
   uint64_t ckSize;                // chunk size, in bytes
   uint32_t ckFmtVersion;          // version of this file format
   uint32_t ckFmtID;               // this file format ID. 0: DSD raw
@@ -65,16 +67,20 @@ typedef struct {
   uint32_t ckChannelNum;          // channel number
   uint32_t ckSampleRate;          // sampling frequency, in Hz
   uint32_t ckBitPerSample;        // bits per sample 1: LSB, 8: MSB
-  uint64_t ckSampleCount;         // sampling count is the num per 1 channel.
+  uint64_t ckSampleCount;         // sampling count is the num per channel.
   uint32_t ckBlockSizePerChannel; // block size per channel, in bytes (fixed 4096)
-  uint8_t reserved[4]
+  uint8_t reserved[4];            // reserved 4 bytes
 } __attribute((packed)) FormatChunk;
 
+const ID DSF_FORMAT_ID = {'f', 'm', 't', ' '};
+
 typedef struct {
-  ID ckID;                 // chunkid 'data'
+  ID ckID;                 // chunk id 'data'
   uint64_t ckSize;         // chunk size, in bytes
   uint8_t ckSampleData[0]; // sample data array
 } __attribute((packed)) DataChunk;
+
+const ID DSF_DATA_ID = {'d', 'a', 't', 'a'};
 
 #ifdef __cplusplus
 }
